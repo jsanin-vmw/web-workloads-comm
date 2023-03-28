@@ -1,21 +1,25 @@
 package com.example.springboot;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.util.Arrays;
-
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
 import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
-import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 @SpringBootApplication
 public class Application {
@@ -45,17 +49,13 @@ public class Application {
 	}
 
 	@Bean
-	public RestTemplate restTemplate(RestTemplateBuilder builder) {
-		builder.requestFactory(() -> new SimpleClientHttpRequestFactory() {
-			@Override
-			protected void prepareConnection(HttpURLConnection connection, String httpMethod) throws IOException {
-				if (connection instanceof HttpsURLConnection) {
-					((HttpsURLConnection) connection).setHostnameVerifier((hostname, session) -> true);
-				}
-				super.prepareConnection(connection, httpMethod);
-			}
-		});
-//		restTemplate.setRequestFactory();
-		return builder.build();
+	public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+		TrustStrategy acceptingTrustStrategy = (x509Certificates, s) -> true;
+		SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
+		SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, new NoopHostnameVerifier());
+		CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(csf).build();
+		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+		requestFactory.setHttpClient(httpClient);
+		return new RestTemplate(requestFactory);
 	}
 }
