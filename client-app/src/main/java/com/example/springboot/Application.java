@@ -1,5 +1,7 @@
 package com.example.springboot;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.Arrays;
 
 import org.springframework.boot.CommandLineRunner;
@@ -10,7 +12,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
 import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
+
+import javax.net.ssl.HttpsURLConnection;
 
 @SpringBootApplication
 public class Application {
@@ -41,6 +46,16 @@ public class Application {
 
 	@Bean
 	public RestTemplate restTemplate(RestTemplateBuilder builder) {
+		builder.requestFactory(() -> new SimpleClientHttpRequestFactory() {
+			@Override
+			protected void prepareConnection(HttpURLConnection connection, String httpMethod) throws IOException {
+				if (connection instanceof HttpsURLConnection) {
+					((HttpsURLConnection) connection).setHostnameVerifier((hostname, session) -> true);
+				}
+				super.prepareConnection(connection, httpMethod);
+			}
+		});
+//		restTemplate.setRequestFactory();
 		return builder.build();
 	}
 }
