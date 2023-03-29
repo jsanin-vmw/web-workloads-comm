@@ -35,16 +35,16 @@ And look for the section `Knative services`
 3. Install the `client-app` and set the env variable `SERVER_APP_URL` to the previous url.
 
 ```shell
-tanzu apps workload create client-app \
+tanzu apps workload create client-app-tls-val \
 --git-repo  https://github.com/jsanin-vmw/web-workloads-comm \
 --sub-path  client-app \
---git-branch main \
---env "SERVER_APP_URL=https://server-app.default.YOUR-CLUSTER-DOMAIN" \
+--git-branch call-server-app-tls-validation \
+--env "SERVER_APP_URL=https://secure-server-wrkld:8443" \
 --request-cpu 500m \
 --request-memory 250Mi \
 --limit-cpu 1000m \
 --limit-memory 1500Mi \
---type web \
+--type server \
 --yes \
 --namespace default
 ```
