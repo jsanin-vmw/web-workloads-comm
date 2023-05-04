@@ -11,3 +11,13 @@ management:
       show-details: always
 endpoints:
   server-app-url: ${SERVER_APP_URL}
+logging:
+  level:
+    org:
+      springframework:
+        web:
+          client:
+            RestTemplate: DEBUG
+  file:
+    name: /Users/jsanin/dev/web-workloads-comm/logs/client-app.log
+
